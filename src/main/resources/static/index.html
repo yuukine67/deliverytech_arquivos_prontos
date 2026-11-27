@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeliveryTech - Calculadora de pedidos</title>
+  <style>
+    body { max-width: 550px; margin: 4rem auto; padding: 0 1.25rem; font-family: Arial, sans-serif; color: #1b2a4a; }
+    main { border: 1px solid #d4e2e8; border-radius: 12px; padding: 1.5rem; }
+    label, input, button { display: block; margin-bottom: .9rem; }
+    input { padding: .7rem; width: 9rem; font-size: 1rem; }
+    button { background: #1b2a4a; color: white; border: 0; padding: .8rem 1.2rem; cursor: pointer; }
+    #resultado { min-height: 1.5rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>DeliveryTech</h1>
+    <h2>Calculadora de pedidos</h2>
+    <p>Preço por kit: <strong>R$ 25,00</strong></p>
+    <form id="formPedido">
+      <label for="quantidade">Quantidade de kits</label>
+      <input type="number" id="quantidade" min="1" max="20" step="1" required>
+      <button type="submit">Calcular pedido</button>
+    </form>
+    <p id="resultado" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+    const formulario = document.getElementById("formPedido");
+    const campo = document.getElementById("quantidade");
+    const resultado = document.getElementById("resultado");
+
+    formulario.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      const quantidade = Number(campo.value);
+      resultado.textContent = "Calculando...";
+      try {
+        const resposta = await fetch("/api/pedidos/calcular", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantidade })
+        });
+        const dados = await resposta.json();
+        if (!resposta.ok) {
+          resultado.textContent = dados.mensagem || "Não foi possível calcular o pedido.";
+          return;
+        }
+        const total = Number(dados.valorTotal).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        resultado.textContent = "Total do pedido: " + total;
+      } catch (erro) {
+        resultado.textContent = "Erro de comunicação com o servidor. Tente novamente.";
+      }
+    });
+  </script>
+</body>
+</html>
